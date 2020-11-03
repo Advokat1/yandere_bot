@@ -1,0 +1,35 @@
+version: '3'
+services:
+
+  #Python Service
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/python/Dockerfile
+    container_name: yandere_bot_app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: yandere_bot_app
+      SERVICE_TAGS: dev
+    working_dir: /var/app
+    volumes:
+      - ./src:/var/app
+    networks:
+      - app-network
+
+  redis:
+    image: "redis:alpine"
+    command: redis-server
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    networks:
+      - app-network
+
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
