@@ -4,6 +4,10 @@ list_of_commands = [
     {
         'command': "test_states",
         'description': "Проверяет работу 'состояний'"
+    },
+    {
+        'command': 'give_random_images',
+        'description': 'Присылает случайные картинки'
     }
 ]
 
