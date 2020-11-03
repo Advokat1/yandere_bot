@@ -19,6 +19,11 @@ async def test_states(message: types.Message):
         for item in result
         if item['rating'] != 'e'
     ]
+    if len(media) == 0:
+        await bot.send('не получилось найти картинки, попробуй еще раз')
+        return
+    if len(media) == 1:
+        await bot.send_photo(message.chat.id, media[0])
     await bot.send_media_group(
         message.chat.id,
         media
