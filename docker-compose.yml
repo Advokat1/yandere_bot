@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/python/Dockerfile
+    image: app
     container_name: yandere_bot_app
     restart: unless-stopped
     tty: true
@@ -28,6 +29,30 @@ services:
     networks:
       - app-network
 
+  migrator:
+      image: app
+      command: orator migrate -c db.py -f
+      volumes:
+        - ./src:/var/app
+      networks:
+        - app-network
+
+  #MySQL Service
+  db:
+    image: mysql:8.0.21
+    command: --default-authentication-plugin=mysql_native_password --init-file /var/www/scripts/init.sql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: strong_P4ssword!
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql_yandere
+    ports:
+      - "6306:3306"
+    volumes:
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+      - ./docker/mysql/init.sql:/var/www/scripts/init.sql
+    networks:
+      - app-network
 
 #Docker Networks
 networks:

@@ -4,6 +4,6 @@ from pathlib import Path
 env_path = Path('') / '.env'
 load_dotenv(dotenv_path=env_path)
 
-from . import app
+from . import app, commands, database
 
-__all__ = ['app']
+__all__ = ['app', 'commands', 'database']
