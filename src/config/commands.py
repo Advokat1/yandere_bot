@@ -2,19 +2,11 @@ from aiogram.types import BotCommand
 
 list_of_commands = [
     {
-        'command': 'give_random_images',
-        'description': 'Присылает случайные картинки'
+        'command': 'take',
+        'description': '{count=1} Присылает случайные картинки'
     },
     {
-        'command': 'make_admin',
-        'description': '[ADMIN ONLY]'
-    },
-    {
-        'command': 'update_list',
-        'description': '[ADMIN ONLY]'
-    },
-    {
-        'command': 'init_img',
+        'command': 'admin',
         'description': '[ADMIN ONLY]'
     },
 ]

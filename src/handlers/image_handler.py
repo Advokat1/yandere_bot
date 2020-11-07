@@ -1,46 +1,43 @@
 import asyncio
 
 from aiogram import types
-from config.app import dp, bot
-from models import User
-from services.parser import parser
+from config.app import dp
 
 
-@dp.message_handler(commands=['give_random_images'], content_types=types.ContentTypes.TEXT, state='*')
-async def test_states(message: types.Message):
+@dp.message_handler(commands=['take'], content_types=types.ContentTypes.TEXT, state='*')
+async def take_image(message: types.Message):
     from models import Img
-    img = Img.normal().order_by_raw('RAND()').limit(2).get()
+
+    def try_parse_int(s, base=10, val=False):
+        try:
+            return int(s, base)
+        except ValueError:
+            return val
+
+    ln = 1
+    if message.get_args():
+        args = message.get_args().split()
+        if len(args) != 0 and try_parse_int(args[0]):
+            ln = int(args[0])
+            if not 1 <= ln <= 10:
+                await message.reply('Количество изображений может быть в диапазоне от 1 до 10')
+                return
+
     m = False
     i = 0
-    while not m and i < 2:
+    max_tries = 3
+    while not m and i < max_tries:
         try:
-            m = await bot.send_photo(message.chat.id, img[i].file_url)
+            imgs = Img.normal().order_by_raw('RAND()').limit(ln).get()
+            media_group = [
+                types.InputMediaPhoto(
+                    img.file_url,
+                    caption=f'Author: {img.author} | Rating: {img.rating}\nTags: {" ".join(img.tags)}'
+                ) for img in imgs
+            ]
+            m = await message.answer_media_group(media_group)
         except:
             i += 1
-            await message.answer('Что-то не так, попробую еще раз')
+            if i == max_tries:
+                await message.answer('Произошла ошибка, попробуйте позже')
             await asyncio.sleep(1)
-
-
-@dp.message_handler(commands=['update_list'], content_types=types.ContentTypes.TEXT, state='*')
-async def test_states(message: types.Message):
-    user = User.find(message.from_user.id)
-    if not user.is_admin:
-        await message.answer('Ты не админ!')
-        return
-    await bot.send_message(message.chat.id, 'Начал обновлять список картинок')
-    c = await parser.get_list(1, 1000, message.get_args())
-    await bot.send_message(message.chat.id, f'Завершил обновление ({c})')
-
-
-@dp.message_handler(commands=['init_img'], content_types=types.ContentTypes.TEXT, state='*')
-async def test_states(message: types.Message):
-    import asyncio
-    user = User.find(message.from_user.id)
-    if not user.is_admin:
-        await message.answer('Ты не админ!')
-        return
-    await bot.send_message(message.chat.id, 'Начал загружать список картинок')
-    for i in range(1, 50):
-        c = await parser.get_list(i, 1000)
-        await asyncio.sleep(1)
-    await bot.send_message(message.chat.id, f'Завершил обновление ({c})')
