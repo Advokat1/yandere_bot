@@ -7,9 +7,9 @@ class Parser:
     def __init__(self):
         self.session = aiohttp.ClientSession()
 
-    async def get_list(self, page, limit=10, tags=None):
-        if tags is None:
-            tags = ['rating:q']
+    async def get_list(self, page, limit=500, tags=[]) -> int:
+        if tags is []:
+            tags = ['rating:s', 'rating:q']
         uri = '/posts.json'
         params = {
             'limit': limit,
@@ -18,13 +18,14 @@ class Parser:
         }
         async with self.session.get(self.base_uri + uri, params=params) as response:
             json = await response.json()
-            self.save(json)
+            return self.save(json)
 
     def save(self, array: list) -> int:
         from models import Img
+
         c = 0
         for item in array:
-            if not 'id' in item:
+            if 'id' not in item:
                 continue
             img = Img()
             img.id = item['id']

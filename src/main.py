@@ -5,8 +5,9 @@ import logging as log
 
 from config import *
 from handlers import *
+from middlewares import *
 
-__all__ = ['app', 'default_handler']
+__all__ = ['app', 'default_handler', 'ThrottlingMiddleware']
 
 
 async def on_shutdown(callback):
