@@ -9,12 +9,15 @@ from services.parser import parser
 @dp.message_handler(commands=['give_random_images'], content_types=types.ContentTypes.TEXT, state='*')
 async def test_states(message: types.Message):
     from models import Img
-    img = Img.normal().order_by_raw('RAND()').limit(1).get()
+    img = Img.normal().order_by_raw('RAND()').limit(2).get()
     m = False
-    while not m:
+    i = 0
+    while not m and i < 2:
         try:
-            m = await bot.send_photo(message.chat.id, img[0].file_url)
+            m = await bot.send_photo(message.chat.id, img[i].file_url)
         except:
+            i += 1
+            await message.answer('Что-то не так, попробую еще раз')
             await asyncio.sleep(1)
 
 
@@ -25,17 +28,19 @@ async def test_states(message: types.Message):
         await message.answer('Ты не админ!')
         return
     await bot.send_message(message.chat.id, 'Начал обновлять список картинок')
-    await parser.get_list(1, 1000)
-    await bot.send_message(message.chat.id, 'Завершил обновление')
+    c = await parser.get_list(1, 1000, message.get_args())
+    await bot.send_message(message.chat.id, f'Завершил обновление ({c})')
 
 
 @dp.message_handler(commands=['init_img'], content_types=types.ContentTypes.TEXT, state='*')
 async def test_states(message: types.Message):
+    import asyncio
     user = User.find(message.from_user.id)
     if not user.is_admin:
         await message.answer('Ты не админ!')
         return
     await bot.send_message(message.chat.id, 'Начал загружать список картинок')
     for i in range(1, 50):
-        await parser.get_list(i, 1000)
-    await bot.send_message(message.chat.id, 'Завершил обновление')
+        c = await parser.get_list(i, 1000)
+        await asyncio.sleep(1)
+    await bot.send_message(message.chat.id, f'Завершил обновление ({c})')

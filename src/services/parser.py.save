@@ -9,7 +9,7 @@ class Parser:
 
     async def get_list(self, page, limit=10, tags=None):
         if tags is None:
-            tags = ['rating:q']
+            tags = ['rating:q katai_kollection']
         uri = '/posts.json'
         params = {
             'limit': limit,
@@ -20,9 +20,9 @@ class Parser:
             json = await response.json()
             self.save(json)
 
-    def save(self, array: list) -> int:
+    def save(self, array: list) -> bool:
         from models import Img
-        c = 0
+
         for item in array:
             if not 'id' in item:
                 continue
@@ -36,9 +36,8 @@ class Parser:
             img.rating = item['rating']
             img.is_rating_locked = item['is_rating_locked']
             img.has_children = item['has_visible_children']
-            if img.save():
-                c += 1
-        return c
+            img.save()
+        return True
 
 
 parser = Parser()
