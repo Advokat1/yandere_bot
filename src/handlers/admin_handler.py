@@ -1,8 +1,12 @@
 from aiogram import types
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters import Text
 
 from models import User
 from config.app import dp, bot
 from services.parser import parser
+from helpers.permissions import is_admin
+from states.AdminStates import RemoveConfirmation
 
 
 @dp.message_handler(commands=['make_admin'], content_types=types.ContentTypes.TEXT, state="*")
@@ -23,10 +27,8 @@ async def make_admin(message: types.Message):
 
 
 @dp.message_handler(commands=['admin_update'], content_types=types.ContentTypes.TEXT, state='*')
-async def test_states(message: types.Message):
-    user = User.find(message.from_user.id)
-    if not user.is_admin:
-        await message.answer('Ты не админ!')
+async def admin_update(message: types.Message):
+    if not await is_admin(message):
         return
     args = message.get_args().split(' ')
     try:
@@ -46,28 +48,55 @@ async def test_states(message: types.Message):
 
 @dp.message_handler(commands=['admin_count'], content_types=types.ContentTypes.TEXT, state='*')
 async def admin_count(message: types.Message):
+    if not await is_admin(message):
+        return
     from config.database import db
     from models import Img
 
-    user = User.find(message.from_user.id)
-    if not user.is_admin:
-        await message.answer('Ты не админ!')
-        return
     count = db.connection(db.get_default_connection()).table(Img.__table__).count()
     await message.answer(f'Сейчас бот знает {count} картинок.')
 
 
 @dp.message_handler(commands=['clear_list'], content_types=types.ContentTypes.TEXT, state='*')
 async def clear_list(message: types.Message):
+    if not await is_admin(message):
+        return
     from config.database import db
     from models import Img
 
-    user = User.find(message.from_user.id)
-    if not user.is_admin:
-        await message.answer('Ты не админ!')
-        return
     await bot.send_message(message.chat.id, 'Начал удаление')
     db.connection(db.get_default_connection()).table(Img.__table__).truncate()
     await bot.send_message(message.chat.id, f'Завершил удаление')
 
 
+@dp.message_handler(commands=['admin_leave'], content_types=types.ContentTypes.TEXT, state='*')
+async def admin_leave(message: types.Message):
+    if not await is_admin(message):
+        return
+    await RemoveConfirmation.need_confirming.set()
+    await message.answer('Вы уверены, что хотите удалить себе пара администратора?\n'
+                         'Отправь /cancel для отмены, /confirm для подтверждения')
+
+
+@dp.message_handler(state='*', commands='cancel')
+@dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
+async def cancel_handler(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+
+    await state.finish()
+    await message.answer('Отменено.')
+
+
+@dp.message_handler(commands=['confirm'],
+                    content_types=types.ContentTypes.TEXT,
+                    state=RemoveConfirmation.need_confirming)
+async def remove_confirmation(message: types.Message, state: FSMContext):
+    if not await is_admin(message):
+        return
+    await state.finish()
+    user = User.find(message.from_user.id)
+    user.is_admin = False
+    user.save()
+    await message.answer('Права администратора успешно удалены')

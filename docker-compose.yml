@@ -31,11 +31,13 @@ services:
 
   migrator:
       image: app
-      command: orator migrate -c db.py -f
+      command: ["./wait-for-it.sh", "db:6306", "-t", "3", "--", "orator", "migrate", "-c", "db.py", "-f"]
       volumes:
         - ./src:/var/app
       networks:
         - app-network
+      depends_on:
+        - db
 
   #MySQL Service
   db:
