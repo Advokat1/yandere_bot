@@ -14,7 +14,7 @@ async def take_image(message: types.Message):
         except ValueError:
             return val
 
-    ln = 1
+    ln = 2
     if message.get_args():
         args = message.get_args().split()
         if len(args) != 0 and try_parse_int(args[0]):
