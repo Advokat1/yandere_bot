@@ -5,7 +5,7 @@ class Img(Model):
     __table__ = 'images'
     __incrementing__ = False
     __timestamps__ = True
-    __fillable__ = ['id', 'tags', 'author', 'source', 'file_url', 'score', 'rating', 'is_rating_locked', 'has_children']
+    __fillable__ = ['id', 'tags', 'author', 'source', 'file_url', 'score', 'rating', 'is_rating_locked', 'has_children', 'resource_id']
     __casts__ = {
         'id': 'int',
         'tags': 'list',

@@ -22,7 +22,7 @@ if storage_type == 'memory':
 elif storage_type == 'redis':
     storage = RedisStorage(host=getenv('REDIS_HOST', 'localhost'),
                            port=int(getenv('REDIS_PORT', '6379')),
-                           db=int(getenv('REDIS_DB', 1)),
+                           db=int(getenv('REDIS_STORAGE_DB', 2)),
                            password=None if getenv('REDIS_PASSWORD', None) == '' else getenv('REDIS_PASSWORD', None))
 else:
     raise RuntimeError('Unknown storage')
