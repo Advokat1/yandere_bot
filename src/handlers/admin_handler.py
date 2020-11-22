@@ -41,8 +41,19 @@ async def admin_update(message: types.Message):
     except ValueError:
         page = 1
         tags = args
+    try:
+        if len(args) != 0:
+            pages = int(tags[0])
+            tags = args[2:]
+        else:
+            pages = 1
+            tags = tags
+    except ValueError:
+        pages = 1
+        tags = args
+
     await bot.send_message(message.chat.id, 'Начал обновлять список картинок')
-    c = await parser.get_list(page, 1000, tags)
+    c = await parser.get_list(page, pages, tags, message.chat.id)
     await bot.send_message(message.chat.id, f'Завершил обновление ({c})')
 
 
@@ -76,6 +87,14 @@ async def admin_leave(message: types.Message):
     await RemoveConfirmation.need_confirming.set()
     await message.answer('Вы уверены, что хотите удалить себе пара администратора?\n'
                          'Отправь /cancel для отмены, /confirm для подтверждения')
+
+
+@dp.message_handler(commands=['admin_upgrade_db'], content_types=types.ContentTypes.TEXT, state='*')
+async def admin_upgrade_db(message: types.Message):
+    if not await is_admin(message):
+        return
+    c = await parser.upgrade_db(message.chat.id)
+    await message.answer(f'Было улучшено {c} файлов, если файлов меньше 100 - были обновлены все файлы')
 
 
 @dp.message_handler(state='*', commands='cancel')

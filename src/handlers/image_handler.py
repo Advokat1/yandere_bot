@@ -31,11 +31,15 @@ async def take_image(message: types.Message):
             imgs = Img.normal().order_by_raw('RAND()').limit(ln).get()
             media_group = [
                 types.InputMediaPhoto(
-                    img.file_url,
+                    img.resource_id if img.resource_id else img.file_url,
                     caption=f'Author: {img.author} | Rating: {img.rating}\nTags: {" ".join(img.tags)}'
                 ) for img in imgs
             ]
             m = await message.answer_media_group(media_group)
+            for each, img in zip(m, imgs):
+                if not img.resource_id and each.photo[0].file_id:
+                    img.resource_id = each.photo[0].file_id
+                    img.save()
         except:
             i += 1
             if i == max_tries:
